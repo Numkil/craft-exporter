@@ -4,11 +4,11 @@ namespace studioespresso\exporter\elements;
 
 use Craft;
 use craft\base\Element;
-use craft\elements\Entry;
 use craft\elements\conditions\ElementConditionInterface;
 use craft\elements\conditions\entries\EntryCondition;
 use craft\elements\db\ElementQuery;
 use craft\elements\db\ElementQueryInterface;
+use craft\elements\Entry;
 use craft\elements\User;
 use craft\helpers\Db;
 use craft\helpers\Json;
@@ -235,7 +235,7 @@ class ExportElement extends Element
 
     public function getSelectedFields(): array
     {
-        return array_filter($this->getFields(), function ($field) {
+        return array_filter($this->getFields(), function($field) {
             if ($field['handle']) {
                 return true;
             }
@@ -248,7 +248,7 @@ class ExportElement extends Element
     {
         $elementSettings = Exporter::getInstance()->elements->getElementTypeSettings($this->elementType);
         $settings = $this->getSettings();
-        $group = array_filter($elementSettings['group']['items'], function ($group) use ($settings) {
+        $group = array_filter($elementSettings['group']['items'], function($group) use ($settings) {
             if ($group->id == $settings['group']) {
                 return true;
             }
