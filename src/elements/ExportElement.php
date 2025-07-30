@@ -4,6 +4,9 @@ namespace studioespresso\exporter\elements;
 
 use Craft;
 use craft\base\Element;
+use craft\elements\Entry;
+use craft\elements\conditions\ElementConditionInterface;
+use craft\elements\conditions\entries\EntryCondition;
 use craft\elements\db\ElementQuery;
 use craft\elements\db\ElementQueryInterface;
 use craft\elements\User;
@@ -42,6 +45,40 @@ class ExportElement extends Element
     public static function displayName(): string
     {
         return Craft::t('exporter', 'Export');
+    }
+
+    /**
+     * Creates a new condition for this element type
+     *
+     * @return ElementConditionInterface
+     */
+    public static function createCondition(): EntryCondition
+    {
+        return Craft::createObject(EntryCondition::class, [Entry::class]);
+    }
+
+    public function getCondition(): ElementConditionInterface
+    {
+        $condition = self::createCondition();
+        $record = ExportRecord::findOne(['id' => $this->id]);
+        if ($record === null) {
+            return $condition;
+        }
+        $conditionConfig = $record->conditionConfig;
+        if (!$conditionConfig) {
+            return $condition;
+        }
+
+        $config = Json::decode($conditionConfig);
+        // Restore the condition state from stored configuration
+        if (is_array($config) && !empty($config)) {
+            // Set condition rules if they exist in the config
+            if (isset($config['conditionRules'])) {
+                $condition->setConditionRules($config['conditionRules']);
+            }
+        }
+
+        return $condition;
     }
 
     /**
@@ -198,7 +235,7 @@ class ExportElement extends Element
 
     public function getSelectedFields(): array
     {
-        return array_filter($this->getFields(), function($field) {
+        return array_filter($this->getFields(), function ($field) {
             if ($field['handle']) {
                 return true;
             }
@@ -211,7 +248,7 @@ class ExportElement extends Element
     {
         $elementSettings = Exporter::getInstance()->elements->getElementTypeSettings($this->elementType);
         $settings = $this->getSettings();
-        $group = array_filter($elementSettings['group']['items'], function($group) use ($settings) {
+        $group = array_filter($elementSettings['group']['items'], function ($group) use ($settings) {
             if ($group->id == $settings['group']) {
                 return true;
             }
@@ -416,7 +453,9 @@ class ExportElement extends Element
     public function afterDelete(): void
     {
         if (!$this->propagating) {
-            Db::delete(ExportRecord::tableName(), [
+            Db::delete(
+                ExportRecord::tableName(),
+                [
                     'id' => $this->id, ]
             );
         }

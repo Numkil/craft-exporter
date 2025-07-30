@@ -6,6 +6,7 @@ use Craft;
 use craft\base\Component;
 use craft\base\Element;
 use craft\elements\db\ElementQuery;
+use craft\elements\db\ElementQueryInterface;
 use craft\errors\FieldNotFoundException;
 use craft\helpers\DateTimeHelper;
 use studioespresso\exporter\elements\ExportElement;
@@ -56,6 +57,8 @@ class ExportQueryService extends Component
                     break;
             }
         }
+
+        $this->applyFilter($query, $export);
 
         return $query;
     }
@@ -157,5 +160,16 @@ class ExportQueryService extends Component
 
 
         return $mapped;
+    }
+
+    public function applyFilter(ElementQueryInterface $query, ExportElement $export): ElementQueryInterface
+    {
+        $condition = $export->getCondition();
+
+        if ($condition) {
+            $condition->modifyQuery($query);
+        }
+
+        return $query;
     }
 }
